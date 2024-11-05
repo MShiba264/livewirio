@@ -10,11 +10,11 @@ use function Laravel\Prompts\info;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\warning;
 
-class FissionInstall extends Command
+class LivewirioInstall extends Command
 {
-    protected $signature = 'fission:install {name? : The project name}';
+    protected $signature = 'livewirio:install {name? : The project name}';
 
-    protected $description = 'Run the Fission installation process';
+    protected $description = 'Run the Livewirio installation process';
 
     private $authJsonExists = false;
 
@@ -26,9 +26,7 @@ class FissionInstall extends Command
             return 'local';
         });
 
-        info('Starting Fission installation...');
-
-        $this->copyAuthJson();
+        info('Starting Livewirio installation...');
 
         // Run npm install
         if (! File::exists('node_modules')) {
@@ -36,14 +34,6 @@ class FissionInstall extends Command
             exec('npm install');
         } else {
             warning('Node modules already exist. Skipping npm install.');
-        }
-
-        // Run flux:activate only if auth.json doesn't exist
-        if (! $this->authJsonExists) {
-            info('Activating Flux...');
-            $this->call('flux:activate');
-        } else {
-            info('auth.json found. Skipping Flux manual activation.');
         }
 
         $this->setupEnvFile();
@@ -166,27 +156,5 @@ class FissionInstall extends Command
     private function installPan()
     {
         $this->call('install:pan');
-    }
-
-    private function copyAuthJson()
-    {
-        $sourceAuthJson = $_SERVER['HOME'].'/Code/flux-auth.json';
-        $destinationAuthJson = base_path('auth.json');
-
-        if (File::exists($sourceAuthJson)) {
-            info('Found auth.json in ~/Code/ directory. Copying to application...');
-            File::copy($sourceAuthJson, $destinationAuthJson);
-            info('auth.json copied successfully.');
-
-            // Run composer install again to ensure Flux Pro is properly installed
-            info('Running composer install to activate Flux Pro...');
-            exec('composer install');
-            info('Flux Pro activated.');
-
-            $this->authJsonExists = true;
-        } else {
-            warning('No preset auth.json found. You can add your credentials for Flux in a bit.');
-            $this->authJsonExists = false;
-        }
     }
 }
